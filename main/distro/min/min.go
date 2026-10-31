@@ -19,10 +19,10 @@ import (
 	_ "github.com/xtls/xray-core/proxy/freedom"
 	_ "github.com/xtls/xray-core/proxy/blackhole"
 
-	// 只保留 VLESS + WS 需要的传输
+	// 传输层：TCP + WebSocket + TLS（TLS 内含 ECH / uTLS fingerprint 支持）
 	_ "github.com/xtls/xray-core/transport/internet/tcp"
 	_ "github.com/xtls/xray-core/transport/internet/websocket"
-	_ "github.com/xtls/xray-core/transport/internet/tls"
+	_ "github.com/xtls/xray-core/transport/internet/tls" // 支持 echConfigList / fingerprint(chrome等)
 	_ "github.com/xtls/xray-core/transport/internet/udp"
 
 	// Headers
@@ -33,6 +33,6 @@ import (
 	_ "github.com/xtls/xray-core/main/json"
 	_ "github.com/xtls/xray-core/main/confloader/external"
 
-	// 基本命令
+	// 基本命令（含 tls ech 生成工具）
 	_ "github.com/xtls/xray-core/main/commands/all"
 )
