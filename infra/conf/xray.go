@@ -21,35 +21,20 @@ import (
 
 var (
 	inboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"tunnel":        func() interface{} { return new(DokodemoConfig) },
-		"dokodemo-door": func() interface{} { return new(DokodemoConfig) },
-		"http":          func() interface{} { return new(HTTPServerConfig) },
-		"shadowsocks":   func() interface{} { return new(ShadowsocksServerConfig) },
-		"mixed":         func() interface{} { return new(SocksServerConfig) },
-		"socks":         func() interface{} { return new(SocksServerConfig) },
-		"vless":         func() interface{} { return new(VLessInboundConfig) },
-		"vmess":         func() interface{} { return new(VMessInboundConfig) },
-		"trojan":        func() interface{} { return new(TrojanServerConfig) },
-		"wireguard":     func() interface{} { return &WireGuardConfig{IsClient: false} },
-		"hysteria":      func() interface{} { return new(HysteriaServerConfig) },
-		"tun":           func() interface{} { return new(TunConfig) },
+		"http":  func() interface{} { return new(HTTPServerConfig) },
+		"mixed": func() interface{} { return new(SocksServerConfig) },
+		"socks": func() interface{} { return new(SocksServerConfig) },
+		"vless": func() interface{} { return new(VLessInboundConfig) },
 	}, "protocol", "settings")
 
 	outboundConfigLoader = NewJSONConfigLoader(ConfigCreatorCache{
-		"block":       func() interface{} { return new(BlackholeConfig) },
-		"blackhole":   func() interface{} { return new(BlackholeConfig) },
-		"loopback":    func() interface{} { return new(LoopbackConfig) },
-		"direct":      func() interface{} { return new(FreedomConfig) },
-		"freedom":     func() interface{} { return new(FreedomConfig) },
-		"http":        func() interface{} { return new(HTTPClientConfig) },
-		"shadowsocks": func() interface{} { return new(ShadowsocksClientConfig) },
-		"socks":       func() interface{} { return new(SocksClientConfig) },
-		"vless":       func() interface{} { return new(VLessOutboundConfig) },
-		"vmess":       func() interface{} { return new(VMessOutboundConfig) },
-		"trojan":      func() interface{} { return new(TrojanClientConfig) },
-		"hysteria":    func() interface{} { return new(HysteriaClientConfig) },
-		"dns":         func() interface{} { return new(DNSOutboundConfig) },
-		"wireguard":   func() interface{} { return &WireGuardConfig{IsClient: true} },
+		"block":     func() interface{} { return new(BlackholeConfig) },
+		"blackhole": func() interface{} { return new(BlackholeConfig) },
+		"direct":    func() interface{} { return new(FreedomConfig) },
+		"freedom":   func() interface{} { return new(FreedomConfig) },
+		"http":      func() interface{} { return new(HTTPClientConfig) },
+		"socks":     func() interface{} { return new(SocksClientConfig) },
+		"vless":     func() interface{} { return new(VLessOutboundConfig) },
 	}, "protocol", "settings")
 )
 
@@ -196,9 +181,6 @@ func (c *InboundDetourConfig) Build() (*core.InboundHandlerConfig, error) {
 	if err != nil {
 		return nil, errors.New("failed to load inbound detour config for protocol ", c.Protocol).Base(err)
 	}
-	if dokodemoConfig, ok := rawConfig.(*DokodemoConfig); ok {
-		receiverSettings.ReceiveOriginalDestination = dokodemoConfig.FollowRedirect
-	}
 	ts, err := rawConfig.(Buildable).Build()
 	if err != nil {
 		return nil, errors.New("failed to build inbound handler for protocol ", c.Protocol).Base(err)
@@ -244,12 +226,6 @@ func validateOutboundTransportSecurity(rawConfig interface{}, senderSettings *pr
 		}
 		if requiresTransportSecurity(vlessCfg.Address) {
 			return errors.New("vless without TLS or other encryption is prohibited unless the server address is a private IP or domain")
-		}
-	}
-
-	if tjCfg, ok := rawConfig.(*TrojanClientConfig); ok {
-		if requiresTransportSecurity(tjCfg.Servers[0].Address) {
-			return errors.New("trojan without TLS is prohibited unless the server address is a private IP or domain")
 		}
 	}
 
