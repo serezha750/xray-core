@@ -3,7 +3,6 @@ package conf
 import (
 	"encoding/json"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/xtls/xray-core/common/errors"
@@ -185,27 +184,18 @@ type WebSocketConfig struct {
 
 func (c *WebSocketConfig) Build() (proto.Message, error) {
 	path := c.Path
-	var ed uint32
 	if u, err := url.Parse(path); err == nil {
 		if q := u.Query(); q.Get("ed") != "" {
-			Ed, _ := strconv.Atoi(q.Get("ed"))
-			ed = uint32(Ed)
 			q.Del("ed")
 			u.RawQuery = q.Encode()
 			path = u.String()
 		}
 	}
 	config := &websocket.Config{
-		Path:                 path,
-		Header:               c.Headers,
-		AcceptProxyProtocol:  c.AcceptProxyProtocol,
-		MaxEarlyData:         ed,
-		EarlyDataHeaderName:  c.EarlyDataHeaderName,
-		UseBrowserForwarding: c.UseBrowserForwarding,
-		Host:                 c.Host,
-	}
-	if c.MaxEarlyData > 0 {
-		config.MaxEarlyData = uint32(c.MaxEarlyData)
+		Path:                path,
+		Header:              c.Headers,
+		AcceptProxyProtocol: c.AcceptProxyProtocol,
+		Host:                c.Host,
 	}
 	return config, nil
 }
@@ -222,7 +212,3 @@ func (c *HysteriaConfig) Build() (proto.Message, error) {
 	return nil, errors.New("hysteria transport removed in minimal build")
 }
 
-type Int32Range struct {
-	From int32 `json:"from"`
-	To   int32 `json:"to"`
-}

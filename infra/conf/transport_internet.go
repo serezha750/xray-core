@@ -1,7 +1,6 @@
 package conf
 
 import (
-	"os"
 	"strings"
 
 	"github.com/xtls/xray-core/common/errors"
