@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -49,6 +48,58 @@ type REALITYConfig struct {
 
 func (c *REALITYConfig) Build() (proto.Message, error) {
 	return nil, errors.New("REALITY removed in minimal build")
+}
+
+type TLSCertConfig struct {
+	CertFile       string   `json:"certificateFile"`
+	CertStr        []string `json:"certificate"`
+	KeyFile        string   `json:"keyFile"`
+	KeyStr         []string `json:"key"`
+	Usage          string   `json:"usage"`
+	OcspStapling   uint64   `json:"ocspStapling"`
+	OneTimeLoading bool     `json:"oneTimeLoading"`
+	BuildChain     bool     `json:"buildChain"`
+}
+
+// Build implements Buildable.
+func (c *TLSCertConfig) Build() (*tls.Certificate, error) {
+	certificate := new(tls.Certificate)
+
+	cert, err := readFileOrString(c.CertFile, c.CertStr)
+	if err != nil {
+		return nil, errors.New("failed to parse certificate").Base(err)
+	}
+	certificate.Certificate = cert
+	certificate.CertificatePath = c.CertFile
+
+	if len(c.KeyFile) > 0 || len(c.KeyStr) > 0 {
+		key, err := readFileOrString(c.KeyFile, c.KeyStr)
+		if err != nil {
+			return nil, errors.New("failed to parse key").Base(err)
+		}
+		certificate.Key = key
+		certificate.KeyPath = c.KeyFile
+	}
+
+	switch strings.ToLower(c.Usage) {
+	case "encipherment":
+		certificate.Usage = tls.Certificate_ENCIPHERMENT
+	case "verify":
+		certificate.Usage = tls.Certificate_AUTHORITY_VERIFY
+	case "issue":
+		certificate.Usage = tls.Certificate_AUTHORITY_ISSUE
+	default:
+		certificate.Usage = tls.Certificate_ENCIPHERMENT
+	}
+	if certificate.KeyPath == "" && certificate.CertificatePath == "" {
+		certificate.OneTimeLoading = true
+	} else {
+		certificate.OneTimeLoading = c.OneTimeLoading
+	}
+	certificate.OcspStapling = c.OcspStapling
+	certificate.BuildChain = c.BuildChain
+
+	return certificate, nil
 }
 
 type TLSConfig struct {
