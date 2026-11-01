@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"os"
 	"encoding/json"
 	"net/url"
 	"strings"
@@ -212,3 +213,13 @@ func (c *HysteriaConfig) Build() (proto.Message, error) {
 	return nil, errors.New("hysteria transport removed in minimal build")
 }
 
+
+func readFileOrString(f string, s []string) ([]byte, error) {
+	if len(f) > 0 {
+		return os.ReadFile(f)
+	}
+	if len(s) > 0 {
+		return []byte(strings.Join(s, "\n")), nil
+	}
+	return nil, errors.New("both file and bytes are empty.")
+}
